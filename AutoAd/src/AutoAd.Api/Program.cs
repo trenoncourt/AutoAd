@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Novell.Directory.Ldap;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection.PortableExecutable;
 
 namespace AutoAd.Api
 {
@@ -56,6 +59,18 @@ namespace AutoAd.Api
                     {
                         r.MapGet("users", async context =>
                         {
+                            using (var cn = new LdapConnection())
+                            {
+                                cn.Connect(AppSettings.Ldap.Host, AppSettings.Ldap.Port);
+                                cn.Bind(AppSettings.Ldap.User, AppSettings.Ldap.Password);
+
+                                var t = cn.Search("CN=Users,DC=Mobilis,DC=local", LdapConnection.SCOPE_SUB, "(cn=*)", new[] { "userPrincipalName", "displayName", "primaryGroupID", "title" }, false);
+                                var bite = new List<LdapEntry>();
+                                while (t.hasMore())
+                                {
+                                    bite.Add(t.next());
+                                }
+                            }
                             await context.Response.WriteAsync("");
                         });
                     });
