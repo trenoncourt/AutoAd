@@ -32,5 +32,7 @@ namespace AutoAd.Api
         public string User { get; set; }
 
         public string Password { get; set; }
+
+        public string Base { get; set; }
     }
 }
