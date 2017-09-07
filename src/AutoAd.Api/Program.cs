@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Novell.Directory.Ldap;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection.PortableExecutable;
 
 namespace AutoAd.Api
@@ -75,12 +76,17 @@ namespace AutoAd.Api
                                     context.Response.StatusCode = 400;
                                     await context.Response.WriteAsync("No base defined.");
                                 }
+                                string[] attrs = context.Request.Query["attrs"].ToString().Split(',');
+                                if (!attrs.Any())
+                                {
+                                    attrs = null;
+                                }
 
-                                var t = cn.Search("CN=Users,DC=Mobilis,DC=local", LdapConnection.SCOPE_SUB, "(cn=*)", new[] { "userPrincipalName", "displayName", "primaryGroupID", "title" }, false);
-                                var bite = new List<LdapEntry>();
+                                var t = cn.Search(@base, LdapConnection.SCOPE_SUB, "(cn=*)", attrs, false);
+                                var entries = new List<LdapEntry>();
                                 while (t.hasMore())
                                 {
-                                    bite.Add(t.next());
+                                    entries.Add(t.next());
                                 }
                             }
                             await context.Response.WriteAsync("");
