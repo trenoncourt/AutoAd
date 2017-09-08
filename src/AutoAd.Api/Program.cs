@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -11,6 +12,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using AutoAd.Api.Aliases.Models;
+using AutoAd.Api.Extensions;
+using Newtonsoft.Json.Linq;
 
 namespace AutoAd.Api
 {
@@ -60,7 +64,7 @@ namespace AutoAd.Api
                     app.UseRouter(r =>
                     {
                         r.MapGet("users", async context =>
-                        {              
+                        {
                             using (var cn = new LdapConnection())
                             {
                                 cn.Connect(AppSettings.Ldap.Host, AppSettings.Ldap.Port);
@@ -75,21 +79,66 @@ namespace AutoAd.Api
                                 {
                                     context.Response.StatusCode = 400;
                                     await context.Response.WriteAsync("No base defined.");
+                                    return;
                                 }
                                 string[] attrs = context.Request.Query["attrs"].ToString().Split(',');
                                 if (!attrs.Any())
                                 {
                                     attrs = null;
                                 }
-
-                                var t = cn.Search(@base, LdapConnection.SCOPE_SUB, "(cn=*)", attrs, false);
-                                var entries = new List<LdapEntry>();
-                                while (t.hasMore())
+                                string[] queryParts = context.Request.QueryString.Value.Replace("?", "").Split('&');
+                                IEnumerable<Condition> conditions = queryParts.GetConditions();
+                                string ldapQuery = "(&";
+                                foreach (var condition in conditions)
                                 {
-                                    entries.Add(t.next());
+                                    ldapQuery += $"({condition.Key}=";
+                                    switch (condition.Type)
+                                    {
+                                        case ConditionType.Equal:
+                                            ldapQuery += condition.Value;
+                                            break;
+                                        case ConditionType.Contains:
+                                            ldapQuery += $"*{condition.Value}*";
+                                            break;
+                                        case ConditionType.StartsWith:
+                                            ldapQuery += $"*{condition.Value}";
+                                            break;
+                                        case ConditionType.EndsWith:
+                                            ldapQuery += $"{condition.Value}*";
+                                            break;
+                                        default:
+                                            throw new ArgumentOutOfRangeException();
+                                    }
+                                    ldapQuery += ")";
                                 }
+                                ldapQuery += ")";
+                                if (!conditions.Any())
+                                {
+                                    ldapQuery = null;
+                                }
+
+                                LdapSearchResults ldapResults = cn.Search(@base, LdapConnection.SCOPE_SUB, ldapQuery, attrs, false);
+                                var entries = new List<LdapEntry>();
+
+                                var array = new JArray();
+                                while (ldapResults.hasMore())
+                                {
+                                    LdapEntry user = ldapResults.next();
+                                    var attrSet = user.getAttributeSet();
+                                    
+                                    JObject @object = new JObject();
+                                    foreach (LdapAttribute ldapAttribute in attrSet)
+                                    {
+                                        @object.Add(ldapAttribute.Name, ldapAttribute?.StringValue);
+                                    }
+                                    array.Add(@object);
+                                    entries.Add(user);
+                                }
+                                
+                                string json = array.ToString();
+                                context.Response.ContentType = "application/json";
+                                await context.Response.WriteAsync(json);
                             }
-                            await context.Response.WriteAsync("");
                         });
                     });
                 })
