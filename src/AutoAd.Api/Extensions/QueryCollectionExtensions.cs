@@ -31,7 +31,7 @@ namespace AutoAd.Api.Extensions
                 }
                 else
                 {
-                    conditions.Add(new Condition { Type = ConditionType.Equal, Key = queryPart.Key, Value = queryPart.Value });
+                    conditions.Add(new Condition { Type = ConditionType.Equals, Key = queryPart.Key, Value = queryPart.Value });
                 }
             }
             return conditions;

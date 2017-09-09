@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AutoAd.Api.Aliases.Models;
+using AutoAd.Api.Builders;
 using AutoAd.Api.Extensions;
 using Newtonsoft.Json.Linq;
 
@@ -69,50 +70,25 @@ namespace AutoAd.Api
                                 cn.Connect(AppSettings.Ldap.Host, AppSettings.Ldap.Port);
                                 cn.Bind(AppSettings.Ldap.User, AppSettings.Ldap.Password);
 
-                                string @base = context.Request.Query["base"].ToString();
-                                if (string.IsNullOrEmpty(@base))
-                                {
-                                    @base = AppSettings.Ldap.Base;
-                                }
+                                string @base = GetBase(context);
                                 if (string.IsNullOrEmpty(@base))
                                 {
                                     context.Response.StatusCode = 400;
                                     await context.Response.WriteAsync("No base defined.");
                                     return;
                                 }
-                                string[] attrs = context.Request.Query["attrs"].ToString().Split(',');
-                                if (!attrs.Any())
-                                {
-                                    attrs = null;
-                                }
+                                string[] attrs = GetAttrs(context);
+                                
                                 IEnumerable<Condition> conditions = context.Request.Query.GetConditions();
-                                string ldapQuery = "(&";
-                                foreach (var condition in conditions)
+                                string ldapQuery = null;
+                                if (conditions.Any())
                                 {
-                                    ldapQuery += $"({condition.Key}=";
-                                    switch (condition.Type)
+                                    var builder = new LdapQueryBuilder();
+                                    foreach (Condition condition in conditions)
                                     {
-                                        case ConditionType.Equal:
-                                            ldapQuery += condition.Value;
-                                            break;
-                                        case ConditionType.Contains:
-                                            ldapQuery += $"*{condition.Value}*";
-                                            break;
-                                        case ConditionType.StartsWith:
-                                            ldapQuery += $"{condition.Value}*";
-                                            break;
-                                        case ConditionType.EndsWith:
-                                            ldapQuery += $"*{condition.Value}";
-                                            break;
-                                        default:
-                                            throw new ArgumentOutOfRangeException();
+                                        builder.AddCondition(condition);
                                     }
-                                    ldapQuery += ")";
-                                }
-                                ldapQuery += ")";
-                                if (!conditions.Any())
-                                {
-                                    ldapQuery = null;
+                                    ldapQuery = builder.Build();
                                 }
 
                                 LdapSearchResults ldapResults = cn.Search(@base, LdapConnection.SCOPE_SUB, ldapQuery, attrs, false);
@@ -141,6 +117,22 @@ namespace AutoAd.Api
                     });
                 })
                 .Build();
+
+        private static string GetBase(HttpContext context)
+        {
+            string @base = context.Request.Query["base"].ToString();
+            if (string.IsNullOrEmpty(@base))
+            {
+                @base = AppSettings.Ldap.Base;
+            }
+            return @base;
+        }
+        
+        private static string[] GetAttrs(HttpContext context)
+        {
+            string[] attrs = context.Request.Query["attrs"].ToString().Split(',');
+            return !attrs.Any() ? null : attrs;
+        }
     }
 }
 

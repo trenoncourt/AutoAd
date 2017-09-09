@@ -11,7 +11,7 @@
 
     public enum ConditionType : byte
     {
-        Equal = 1,
+        Equals = 1,
         Contains = 2,
         StartsWith = 3,
         EndsWith = 4
