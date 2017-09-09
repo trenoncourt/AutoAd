@@ -3,49 +3,38 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoAd.Api.Aliases;
 using AutoAd.Api.Aliases.Models;
-using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Http;
 
 namespace AutoAd.Api.Extensions
 {
     public static class QueryCollectionExtensions
     {
-        public static IEnumerable<Condition> GetConditions(this string[] queryParts)
+        public static IEnumerable<Condition> GetConditions(this IQueryCollection queryCollection)
         {
             ICollection<Condition> conditions = new List<Condition>();
-            foreach (var queryPart in queryParts)
+            foreach (var queryPart in queryCollection)
             {
-                if(ConditionAlias.ReservedKewords.Contains(queryPart.Split('=')[0], StringComparer.InvariantCultureIgnoreCase))
+                if (ConditionAlias.ReservedKewords.Any(kw => kw.EndsWith(queryPart.Key, StringComparison.InvariantCultureIgnoreCase)))
                     continue;
                 
-                if (queryPart.Contains(ConditionAlias.EndsWith, StringComparison.InvariantCultureIgnoreCase))
+                if (queryPart.Key.EndsWith(ConditionAlias.EndsWith, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    conditions.Add(GetCondition(ConditionAlias.EndsWith, ConditionType.EndsWith, queryPart));
+                    conditions.Add(new Condition { Type = ConditionType.EndsWith, Key = queryPart.Key.Replace(ConditionAlias.EndsWith, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
                 }
-                else if (queryPart.Contains(ConditionAlias.StartsWith, StringComparison.InvariantCultureIgnoreCase))
+                else if (queryPart.Key.EndsWith(ConditionAlias.StartsWith, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    conditions.Add(GetCondition(ConditionAlias.StartsWith, ConditionType.StartsWith, queryPart));
+                    conditions.Add(new Condition { Type = ConditionType.StartsWith, Key = queryPart.Key.Replace(ConditionAlias.StartsWith, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
                 }
-                else if (queryPart.Contains(ConditionAlias.Contains, StringComparison.InvariantCultureIgnoreCase))
+                else if (queryPart.Key.EndsWith(ConditionAlias.Contains, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    conditions.Add(GetCondition(ConditionAlias.Contains, ConditionType.Contains, queryPart));
+                    conditions.Add(new Condition { Type = ConditionType.Contains, Key = queryPart.Key.Replace(ConditionAlias.Contains, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
                 }
-                else if (queryPart.Contains(ConditionAlias.Equal, StringComparison.InvariantCultureIgnoreCase))
+                else
                 {
-                    conditions.Add(GetCondition(ConditionAlias.Equal, ConditionType.Equal, queryPart));
+                    conditions.Add(new Condition { Type = ConditionType.Equal, Key = queryPart.Key, Value = queryPart.Value });
                 }
             }
             return conditions;
-        }
-
-        private static Condition GetCondition(string alias, ConditionType type, string queryPart)
-        {
-            string[] parts = Regex.Split(queryPart, alias, RegexOptions.IgnoreCase);
-            return new Condition
-            {
-                Type = type,
-                Key = parts[0],
-                Value = parts[1]
-            };
         }
     }
 }

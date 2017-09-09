@@ -85,8 +85,7 @@ namespace AutoAd.Api
                                 {
                                     attrs = null;
                                 }
-                                string[] queryParts = context.Request.QueryString.Value.Replace("?", "").Split('&');
-                                IEnumerable<Condition> conditions = queryParts.GetConditions();
+                                IEnumerable<Condition> conditions = context.Request.Query.GetConditions();
                                 string ldapQuery = "(&";
                                 foreach (var condition in conditions)
                                 {
