@@ -61,6 +61,7 @@ namespace AutoAd.Api
                 })
                 .Configure(app =>
                 {
+                    app.ConfigureCors(AppSettings);
                     app.UseRouter(r =>
                     {
                         r.MapGet("users", async context =>
