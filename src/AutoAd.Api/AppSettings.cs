@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace AutoAd.Api
+﻿namespace AutoAd.Api
 {
     public class AppSettings
     {

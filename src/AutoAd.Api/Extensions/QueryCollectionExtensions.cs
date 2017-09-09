@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoAd.Api.Aliases;
 using AutoAd.Api.Aliases.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
 using System.Text.RegularExpressions;
 
 namespace AutoAd.Api.Extensions
