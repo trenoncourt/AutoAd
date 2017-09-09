@@ -100,10 +100,10 @@ namespace AutoAd.Api
                                             ldapQuery += $"*{condition.Value}*";
                                             break;
                                         case ConditionType.StartsWith:
-                                            ldapQuery += $"*{condition.Value}";
+                                            ldapQuery += $"{condition.Value}*";
                                             break;
                                         case ConditionType.EndsWith:
-                                            ldapQuery += $"{condition.Value}*";
+                                            ldapQuery += $"*{condition.Value}";
                                             break;
                                         default:
                                             throw new ArgumentOutOfRangeException();
