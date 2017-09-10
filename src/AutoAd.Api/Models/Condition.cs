@@ -1,4 +1,4 @@
-﻿namespace AutoAd.Api.Aliases.Models
+﻿namespace AutoAd.Api.Models
 {
     public class Condition
     {
@@ -12,8 +12,9 @@
     public enum ConditionType : byte
     {
         Equals = 1,
-        Contains = 2,
-        StartsWith = 3,
-        EndsWith = 4
+        NotEquals = 2,
+        Contains = 3,
+        StartsWith = 4,
+        EndsWith = 5
     }
 }

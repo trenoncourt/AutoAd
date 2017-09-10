@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoAd.Api.Aliases;
-using AutoAd.Api.Aliases.Models;
+using AutoAd.Api.Models;
 using Microsoft.AspNetCore.Http;
 
 namespace AutoAd.Api.Extensions

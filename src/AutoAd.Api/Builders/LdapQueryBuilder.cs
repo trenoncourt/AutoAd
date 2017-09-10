@@ -31,6 +31,12 @@ namespace AutoAd.Api.Builders
             return this;
         }
         
+        public LdapQueryBuilder NotEquals(string key, string value)
+        {
+            _sb.AppendFormat("(!({0}={1}))", key, value);
+            return this;
+        }
+        
         public LdapQueryBuilder Contains(string key, string value)
         {
             _sb.AppendFormat("({0}=*{1}*)", key, value);

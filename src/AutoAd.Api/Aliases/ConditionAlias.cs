@@ -5,7 +5,8 @@
         public const string Contains = "contains";
         public const string StartsWith = "startswith";
         public const string EndsWith = "endswith";
+        public const string NotEquals = "!";
 
-        public static readonly string[] ReservedKewords = new [] { "attrs", "base" };
+        public static readonly string[] ReservedKewords = { "attrs", "base" };
     }
 }

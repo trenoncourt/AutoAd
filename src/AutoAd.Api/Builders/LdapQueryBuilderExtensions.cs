@@ -1,5 +1,5 @@
 ﻿using System;
-using AutoAd.Api.Aliases.Models;
+using AutoAd.Api.Models;
 
 namespace AutoAd.Api.Builders
 {

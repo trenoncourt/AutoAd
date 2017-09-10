@@ -10,9 +10,9 @@ using Novell.Directory.Ldap;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AutoAd.Api.Aliases.Models;
 using AutoAd.Api.Builders;
 using AutoAd.Api.Extensions;
+using AutoAd.Api.Models;
 using Newtonsoft.Json.Linq;
 
 namespace AutoAd.Api
@@ -79,7 +79,7 @@ namespace AutoAd.Api
                                 }
                                 string[] attrs = GetAttrs(context);
                                 
-                                IEnumerable<Condition> conditions = context.Request.Query.GetConditions();
+                                IEnumerable<Condition> conditions = context.Request.Query.GetConditions().ToList();
                                 string ldapQuery = null;
                                 if (conditions.Any())
                                 {
