@@ -5,21 +5,21 @@ namespace AutoAd.Api.Builders
 {
     public static class LdapQueryBuilderExtensions
     {
-        public static LdapQueryBuilder AddCondition(this LdapQueryBuilder builder, Condition condition)
+        public static LdapQueryBuilder AddFilter(this LdapQueryBuilder builder, Filter filter)
         {
-            switch (condition.Type)
+            switch (filter.Type)
             {
-                case ConditionType.Equals:
-                    builder.Equals(condition.Key, condition.Value);
+                case FilterType.Equals:
+                    builder.Equals(filter.Key, filter.Value);
                     break;
-                case ConditionType.Contains:
-                    builder.Contains(condition.Key, condition.Value);
+                case FilterType.Contains:
+                    builder.Contains(filter.Key, filter.Value);
                     break;
-                case ConditionType.StartsWith:
-                    builder.StartsWith(condition.Key, condition.Value);
+                case FilterType.StartsWith:
+                    builder.StartsWith(filter.Key, filter.Value);
                     break;
-                case ConditionType.EndsWith:
-                    builder.EndsWith(condition.Key, condition.Value);
+                case FilterType.EndsWith:
+                    builder.EndsWith(filter.Key, filter.Value);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -79,14 +79,14 @@ namespace AutoAd.Api
                                 }
                                 string[] attrs = GetAttrs(context);
                                 
-                                IEnumerable<Condition> conditions = context.Request.Query.GetConditions().ToList();
+                                IEnumerable<Filter> filters = context.Request.Query.GetFilters().ToList();
                                 string ldapQuery = null;
-                                if (conditions.Any())
+                                if (filters.Any())
                                 {
                                     var builder = new LdapQueryBuilder();
-                                    foreach (Condition condition in conditions)
+                                    foreach (Filter filter in filters)
                                     {
-                                        builder.AddCondition(condition);
+                                        builder.AddFilter(filter);
                                     }
                                     ldapQuery = builder.Build();
                                 }

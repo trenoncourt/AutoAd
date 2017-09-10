@@ -9,32 +9,32 @@ namespace AutoAd.Api.Extensions
 {
     public static class QueryCollectionExtensions
     {
-        public static IEnumerable<Condition> GetConditions(this IQueryCollection queryCollection)
+        public static IEnumerable<Filter> GetFilters(this IQueryCollection queryCollection)
         {
-            ICollection<Condition> conditions = new List<Condition>();
+            ICollection<Filter> filters = new List<Filter>();
             foreach (var queryPart in queryCollection)
             {
-                if (ConditionAlias.ReservedKewords.Any(kw => kw.EndsWith(queryPart.Key, StringComparison.InvariantCultureIgnoreCase)))
+                if (FilterAlias.ReservedKewords.Any(kw => kw.EndsWith(queryPart.Key, StringComparison.InvariantCultureIgnoreCase)))
                     continue;
                 
-                if (queryPart.Key.EndsWith(ConditionAlias.EndsWith, StringComparison.InvariantCultureIgnoreCase))
+                if (queryPart.Key.EndsWith(FilterAlias.EndsWith, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    conditions.Add(new Condition { Type = ConditionType.EndsWith, Key = queryPart.Key.Replace(ConditionAlias.EndsWith, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
+                    filters.Add(new Filter { Type = FilterType.EndsWith, Key = queryPart.Key.Replace(FilterAlias.EndsWith, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
                 }
-                else if (queryPart.Key.EndsWith(ConditionAlias.StartsWith, StringComparison.InvariantCultureIgnoreCase))
+                else if (queryPart.Key.EndsWith(FilterAlias.StartsWith, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    conditions.Add(new Condition { Type = ConditionType.StartsWith, Key = queryPart.Key.Replace(ConditionAlias.StartsWith, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
+                    filters.Add(new Filter { Type = FilterType.StartsWith, Key = queryPart.Key.Replace(FilterAlias.StartsWith, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
                 }
-                else if (queryPart.Key.EndsWith(ConditionAlias.Contains, StringComparison.InvariantCultureIgnoreCase))
+                else if (queryPart.Key.EndsWith(FilterAlias.Contains, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    conditions.Add(new Condition { Type = ConditionType.Contains, Key = queryPart.Key.Replace(ConditionAlias.Contains, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
+                    filters.Add(new Filter { Type = FilterType.Contains, Key = queryPart.Key.Replace(FilterAlias.Contains, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
                 }
                 else
                 {
-                    conditions.Add(new Condition { Type = ConditionType.Equals, Key = queryPart.Key, Value = queryPart.Value });
+                    filters.Add(new Filter { Type = FilterType.Equals, Key = queryPart.Key, Value = queryPart.Value });
                 }
             }
-            return conditions;
+            return filters;
         }
     }
 }

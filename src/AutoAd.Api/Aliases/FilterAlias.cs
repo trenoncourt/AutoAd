@@ -1,6 +1,6 @@
 ﻿namespace AutoAd.Api.Aliases
 {
-    public class ConditionAlias
+    public class FilterAlias
     {
         public const string Contains = "contains";
         public const string StartsWith = "startswith";
