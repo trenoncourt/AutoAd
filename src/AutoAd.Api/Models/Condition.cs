@@ -17,6 +17,8 @@
         StartsWith = 4,
         EndsWith = 5,
         Exist = 6,
-        Missing = 7
+        Missing = 7,
+        GreaterEqual = 8,
+        LessEqual = 9
     }
 }

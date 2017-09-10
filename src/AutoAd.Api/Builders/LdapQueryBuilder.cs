@@ -67,6 +67,18 @@ namespace AutoAd.Api.Builders
             }
             return this;
         }
+        
+        public LdapQueryBuilder GreaterEquals(string key, string value)
+        {
+            _sb.AppendFormat("({0}>={1})", key, value);
+            return this;
+        }
+        
+        public LdapQueryBuilder LessEquals(string key, string value)
+        {
+            _sb.AppendFormat("({0}<={1})", key, value);
+            return this;
+        }
 
         public string Build()
         {

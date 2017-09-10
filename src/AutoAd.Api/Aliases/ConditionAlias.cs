@@ -7,6 +7,8 @@
         public const string EndsWith = "endswith";
         public const string NotEquals = "!";
         public const string Exist = "exist";
+        public const string GreaterEquals  = ">";
+        public const string LessEquals  = "<";
 
         public static readonly string[] ReservedKewords = { "attrs", "base" };
     }
