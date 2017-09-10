@@ -54,6 +54,19 @@ namespace AutoAd.Api.Builders
             _sb.AppendFormat("({0}=*{1})", key, value);
             return this;
         }
+        
+        public LdapQueryBuilder Exist(string key, string value)
+        {
+            if (value.Equals("true", StringComparison.InvariantCultureIgnoreCase))
+            {
+                _sb.AppendFormat("({0}=*)", key);   
+            }
+            else if (value.Equals("false", StringComparison.InvariantCultureIgnoreCase))
+            {
+                _sb.AppendFormat("(!({0}=*))", key);
+            }
+            return this;
+        }
 
         public string Build()
         {

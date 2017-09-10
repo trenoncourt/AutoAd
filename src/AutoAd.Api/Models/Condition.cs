@@ -15,6 +15,8 @@
         NotEquals = 2,
         Contains = 3,
         StartsWith = 4,
-        EndsWith = 5
+        EndsWith = 5,
+        Exist = 6,
+        Missing = 7
     }
 }
