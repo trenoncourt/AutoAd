@@ -5,12 +5,27 @@ namespace AutoAd.Api.Builders
 {
     public class LdapQueryBuilder
     {
+        private readonly SearchType _searchType;
         private readonly StringBuilder _sb;
 
-        public LdapQueryBuilder(BaseQueryMode baseQueryMode = BaseQueryMode.And)
+        public LdapQueryBuilder(SearchType searchType = SearchType.None, BaseQueryMode baseQueryMode = BaseQueryMode.And)
         {
+            _searchType = searchType;
             _sb = new StringBuilder();
-            _sb.Append("(");
+
+            switch (searchType)
+            {
+                case SearchType.None:
+                    _sb.Append("(");
+                    break;
+                case SearchType.User:
+                    _sb.Append("(&(|(objectClass=inetOrgPerson)(objectClass=user))(");
+                    break;
+                case SearchType.Group:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(searchType), searchType, null);
+            }
 
             switch (baseQueryMode)
             {
@@ -82,6 +97,19 @@ namespace AutoAd.Api.Builders
 
         public string Build()
         {
+            switch (_searchType)
+            {
+                case SearchType.None:
+                    _sb.Append(")");
+                    break;
+                case SearchType.User:
+                    _sb.Append("))");
+                    break;
+                case SearchType.Group:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(_searchType), _searchType, null);
+            }
             _sb.Append(")");
             return _sb.ToString();
         }

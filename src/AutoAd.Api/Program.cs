@@ -80,16 +80,15 @@ namespace AutoAd.Api
                                 string[] attrs = GetAttrs(context);
                                 
                                 IEnumerable<Filter> filters = context.Request.Query.GetFilters().ToList();
-                                string ldapQuery = null;
+                                var builder = new LdapQueryBuilder(SearchType.User);
                                 if (filters.Any())
                                 {
-                                    var builder = new LdapQueryBuilder();
                                     foreach (Filter filter in filters)
                                     {
                                         builder.AddFilter(filter);
                                     }
-                                    ldapQuery = builder.Build();
                                 }
+                                string ldapQuery = builder.Build();
 
                                 LdapSearchResults ldapResults = cn.Search(@base, LdapConnection.SCOPE_SUB, ldapQuery, attrs, false);
                                 var entries = new List<LdapEntry>();
@@ -130,8 +129,9 @@ namespace AutoAd.Api
         
         private static string[] GetAttrs(HttpContext context)
         {
-            string[] attrs = context.Request.Query["attrs"].ToString().Split(',');
-            return !attrs.Any() ? null : attrs;
+            if (!context.Request.Query.ContainsKey("attrs"))
+                return null;
+            return context.Request.Query["attrs"].ToString().Split(',');
         }
     }
 }
