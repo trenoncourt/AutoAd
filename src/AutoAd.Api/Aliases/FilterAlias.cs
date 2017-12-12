@@ -9,6 +9,7 @@
         public const string Exist = "exist";
         public const string GreaterEquals  = ">";
         public const string LessEquals  = "<";
+        public const string OnlyActiveUsers  = "only_active_users";
 
         public static readonly string[] ReservedKewords = { "attrs", "base" };
     }

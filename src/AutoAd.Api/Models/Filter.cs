@@ -19,6 +19,7 @@
         Exist = 6,
         Missing = 7,
         GreaterEqual = 8,
-        LessEqual = 9
+        LessEqual = 9,
+        OnlyActiveUsers = 10
     }
 }

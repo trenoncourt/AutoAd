@@ -29,6 +29,10 @@ namespace AutoAd.Api.Extensions
                 {
                     filters.Add(new Filter { Type = FilterType.Contains, Key = queryPart.Key.Replace(FilterAlias.Contains, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
                 }
+                else if (queryPart.Key.EndsWith(FilterAlias.OnlyActiveUsers, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    filters.Add(new Filter { Type = FilterType.OnlyActiveUsers, Key = queryPart.Key.Replace(FilterAlias.OnlyActiveUsers, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
+                }
                 else
                 {
                     filters.Add(new Filter { Type = FilterType.Equals, Key = queryPart.Key, Value = queryPart.Value });

@@ -69,7 +69,16 @@ namespace AutoAd.Api.Builders
             _sb.AppendFormat("({0}=*{1})", key, value);
             return this;
         }
-        
+
+        public LdapQueryBuilder OnlyActiveUsers(string key, string value)
+        {
+            if (value == "true" || value == "1")
+            {
+                _sb.Append("(!userAccountControl:1.2.840.113556.1.4.803:=2)");
+            }
+            return this;
+        }
+
         public LdapQueryBuilder Exist(string key, string value)
         {
             if (value.Equals("true", StringComparison.InvariantCultureIgnoreCase))
