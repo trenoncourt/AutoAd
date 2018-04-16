@@ -31,7 +31,7 @@ namespace AutoAd.Api.Extensions
                 }
                 else if (queryPart.Key.EndsWith(FilterAlias.OnlyActiveUsers, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    filters.Add(new Filter { Type = FilterType.OnlyActiveUsers, Key = queryPart.Key.Replace(FilterAlias.OnlyActiveUsers, "", StringComparison.InvariantCultureIgnoreCase), Value = queryPart.Value });
+                    filters.Add(new Filter { Type = FilterType.OnlyActiveUsers, Key = queryPart.Key, Value = queryPart.Value });
                 }
                 else
                 {
