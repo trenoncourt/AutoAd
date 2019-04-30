@@ -68,6 +68,15 @@ namespace AutoAd.Api
                         {
                             using (var cn = new LdapConnection())
                             {
+                                var followReferral = GetfollowReferral(context);
+
+                                if (followReferral)
+                                {
+                                    var constraints = cn.SearchConstraints;
+                                    constraints.ReferralFollowing = true;
+                                    cn.Constraints = constraints;
+                                }
+
                                 cn.Connect(AppSettings.Ldap.Host, AppSettings.Ldap.Port);
                                 cn.Bind(AppSettings.Ldap.User, AppSettings.Ldap.Password);
 
@@ -133,6 +142,17 @@ namespace AutoAd.Api
             if (!context.Request.Query.ContainsKey("attrs"))
                 return null;
             return context.Request.Query["attrs"].ToString().Split(',');
+        }
+
+        private static bool GetfollowReferral(HttpContext context)
+        {
+            string @base = context.Request.Query["followReferral"].ToString();
+            if (string.IsNullOrEmpty(@base))
+            {
+                @base = AppSettings.Ldap.FollowReferral;
+            }
+
+            return @base.ToLower() == "true";
         }
     }
 }
