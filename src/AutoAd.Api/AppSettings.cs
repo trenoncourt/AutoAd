@@ -20,6 +20,8 @@
 
 	public class LdapSettings
     {
+        public string FollowReferral { get; set; }
+
         public string Host { get; set; }
 
         public int Port { get; set; }

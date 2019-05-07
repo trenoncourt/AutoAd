@@ -74,7 +74,7 @@ namespace AutoAd.Api.Builders
         {
             if (value == "true" || value == "1")
             {
-                _sb.Append("(!userAccountControl:1.2.840.113556.1.4.803:=2)");
+                _sb.Append("(!(userAccountControl:1.2.840.113556.1.4.803:=2))");
             }
             return this;
         }
@@ -112,7 +112,7 @@ namespace AutoAd.Api.Builders
                     _sb.Append(")");
                     break;
                 case SearchType.User:
-                    _sb.Append("))");
+                    _sb.Append(")");
                     break;
                 case SearchType.Group:
                     break;

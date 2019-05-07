@@ -21,6 +21,9 @@ namespace AutoAd.Api.Builders
                 case FilterType.EndsWith:
                     builder.EndsWith(filter.Key, filter.Value);
                     break;
+                case FilterType.OnlyActiveUsers:
+                    builder.OnlyActiveUsers(filter.Key, filter.Value);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
