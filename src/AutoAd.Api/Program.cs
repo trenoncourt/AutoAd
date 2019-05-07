@@ -19,7 +19,7 @@ namespace AutoAd.Api
 {
     public class Program
     {
-        private static AppSettings AppSettings;
+        private static AppSettings _appSettings;
 
         public static void Main()
         {
@@ -33,11 +33,9 @@ namespace AutoAd.Api
                 .UseIISIntegration()
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    var env = hostingContext.HostingEnvironment;
-
                     config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
                     config.AddEnvironmentVariables();
-                    AppSettings = config.Build().Get<AppSettings>();
+                    _appSettings = config.Build().Get<AppSettings>();
                 })
                 .ConfigureLogging((hostingContext, logging) =>
                 {
@@ -54,31 +52,31 @@ namespace AutoAd.Api
                 .ConfigureServices(services =>
                 {
                     services.AddRouting();
-                    if (AppSettings.Cors.Enabled)
+                    if (_appSettings.Cors.Enabled)
                     {
                         services.AddCors();
                     }
                 })
                 .Configure(app =>
                 {
-                    app.ConfigureCors(AppSettings);
+                    app.ConfigureCors(_appSettings);
                     app.UseRouter(r =>
                     {
                         r.MapGet("users", async context =>
                         {
                             using (var cn = new LdapConnection())
                             {
-                                var followReferral = GetfollowReferral(context);
-
-                                if (followReferral)
+                                if (_appSettings.ReferralFollowing)
                                 {
+                                    // todo(tre): check if "cn.Constraints.ReferralFollowing = true" is the same
+                                    
                                     var constraints = cn.SearchConstraints;
                                     constraints.ReferralFollowing = true;
                                     cn.Constraints = constraints;
                                 }
 
-                                cn.Connect(AppSettings.Ldap.Host, AppSettings.Ldap.Port);
-                                cn.Bind(AppSettings.Ldap.User, AppSettings.Ldap.Password);
+                                cn.Connect(_appSettings.Ldap.Host, _appSettings.Ldap.Port);
+                                cn.Bind(_appSettings.Ldap.User, _appSettings.Ldap.Password);
 
                                 string @base = GetBase(context);
                                 if (string.IsNullOrEmpty(@base))
@@ -87,6 +85,7 @@ namespace AutoAd.Api
                                     await context.Response.WriteAsync("No base defined.");
                                     return;
                                 }
+
                                 string[] attrs = GetAttrs(context);
                                 
                                 IEnumerable<Filter> filters = context.Request.Query.GetFilters().ToList();
@@ -98,6 +97,7 @@ namespace AutoAd.Api
                                         builder.AddFilter(filter);
                                     }
                                 }
+
                                 string ldapQuery = builder.Build();
 
                                 LdapSearchResults ldapResults = cn.Search(@base, LdapConnection.SCOPE_SUB, ldapQuery, attrs, false);
@@ -112,8 +112,9 @@ namespace AutoAd.Api
                                     JObject @object = new JObject();
                                     foreach (LdapAttribute ldapAttribute in attrSet)
                                     {
-                                        @object.Add(ldapAttribute.Name, ldapAttribute?.StringValue);
+                                        @object.Add(ldapAttribute.Name, ldapAttribute.StringValue);
                                     }
+
                                     array.Add(@object);
                                     entries.Add(user);
                                 }
@@ -132,8 +133,9 @@ namespace AutoAd.Api
             string @base = context.Request.Query["base"].ToString();
             if (string.IsNullOrEmpty(@base))
             {
-                @base = AppSettings.Ldap.Base;
+                @base = _appSettings.Ldap.Base;
             }
+
             return @base;
         }
         
@@ -142,17 +144,6 @@ namespace AutoAd.Api
             if (!context.Request.Query.ContainsKey("attrs"))
                 return null;
             return context.Request.Query["attrs"].ToString().Split(',');
-        }
-
-        private static bool GetfollowReferral(HttpContext context)
-        {
-            string @base = context.Request.Query["followReferral"].ToString();
-            if (string.IsNullOrEmpty(@base))
-            {
-                @base = AppSettings.Ldap.FollowReferral;
-            }
-
-            return @base.ToLower() == "true";
         }
     }
 }

@@ -5,6 +5,8 @@
         public CorsSettings Cors { get; set; }
 
         public LdapSettings Ldap { get; set; }
+        
+        public bool ReferralFollowing { get; set; }
     }
 
     public class CorsSettings
@@ -20,8 +22,6 @@
 
 	public class LdapSettings
     {
-        public string FollowReferral { get; set; }
-
         public string Host { get; set; }
 
         public int Port { get; set; }
