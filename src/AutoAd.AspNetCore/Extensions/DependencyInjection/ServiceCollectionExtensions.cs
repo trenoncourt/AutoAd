@@ -20,6 +20,17 @@ namespace AutoAd.AspNetCore.Extensions.DependencyInjection
             return services;
         }
         
+        public static IServiceCollection AddAutoAd<TFakeLdapService>(this IServiceCollection services, IConfiguration configuration) 
+            where TFakeLdapService : class, ILdapService
+        {
+            if (services == null)
+                throw new ArgumentNullException(nameof(services));
+            services.AddRouting();
+            services.ConfigureAndValidateSingleton<AutoAdOptions>(configuration);
+            services.AddScoped<ILdapService, TFakeLdapService>();
+            return services;
+        }
+        
         public static IServiceCollection ConfigureAndValidateSingleton<TOptions>(
             this IServiceCollection services,
             IConfiguration configuration)

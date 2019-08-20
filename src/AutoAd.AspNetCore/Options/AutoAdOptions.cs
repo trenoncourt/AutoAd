@@ -10,8 +10,6 @@ namespace AutoAd.AspNetCore.Options
         public bool ReferralFollowing { get; set; }
 
         public bool LogCredentials { get; set; }
-
-        public bool UseFakeData { get; set; }
     }
     
     public class LdapOptions
