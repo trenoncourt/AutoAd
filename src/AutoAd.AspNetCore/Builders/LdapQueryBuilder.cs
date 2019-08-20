@@ -1,42 +1,88 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using AutoAd.AspNetCore.Models;
 
-namespace AutoAd.Api.Builders
+namespace AutoAd.AspNetCore.Builders
 {
     public class LdapQueryBuilder
     {
         private readonly SearchType _searchType;
+        private readonly BaseQueryMode _baseQueryMode;
+        private readonly ICollection<Filter> _filters;
         private readonly StringBuilder _sb;
 
-        public LdapQueryBuilder(SearchType searchType = SearchType.None, BaseQueryMode baseQueryMode = BaseQueryMode.And)
+        public bool HasFilters => _filters?.Any() == true;
+
+        public LdapQueryBuilder(SearchType searchType = SearchType.None, BaseQueryMode baseQueryMode = BaseQueryMode.And, ICollection<Filter> filters = null)
         {
             _searchType = searchType;
+            _baseQueryMode = baseQueryMode;
+            _filters = filters;
             _sb = new StringBuilder();
-
-            switch (searchType)
+            
+            switch (_searchType)
             {
                 case SearchType.None:
                     _sb.Append("(");
                     break;
                 case SearchType.User:
-                    _sb.Append("(&(|(objectClass=inetOrgPerson)(objectClass=user))(");
+                    _sb.Append($"{(HasFilters ? "(&" : "" )}(|(objectClass=inetOrgPerson)(objectClass=user)){(HasFilters ? "(" : "" )}");
                     break;
                 case SearchType.Group:
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(searchType), searchType, null);
+                    throw new ArgumentOutOfRangeException(nameof(_searchType), _searchType, null);
             }
-
-            switch (baseQueryMode)
+            
+            AddFilters();
+        }
+        
+        public void AddFilters()
+        {
+            if (HasFilters)
             {
-                case BaseQueryMode.And:
-                    _sb.Append("&");
+                switch (_baseQueryMode)
+                {
+                    case BaseQueryMode.And:
+                        _sb.Append("&");
+                        break;
+                    case BaseQueryMode.Or:
+                        _sb.Append("|");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(_baseQueryMode), _baseQueryMode, null);
+                }
+                
+                foreach (Filter filter in _filters)
+                {
+                    AddFilter(filter);
+                }
+            }
+        }
+
+        public void AddFilter(Filter filter)
+        {
+            switch (filter.Type)
+            {
+                case FilterType.Equals:
+                    Equals(filter.Key, filter.Value);
                     break;
-                case BaseQueryMode.Or:
-                    _sb.Append("|");
+                case FilterType.Contains:
+                    Contains(filter.Key, filter.Value);
+                    break;
+                case FilterType.StartsWith:
+                    StartsWith(filter.Key, filter.Value);
+                    break;
+                case FilterType.EndsWith:
+                    EndsWith(filter.Key, filter.Value);
+                    break;
+                case FilterType.OnlyActiveUsers:
+                    OnlyActiveUsers(filter.Key, filter.Value);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(baseQueryMode), baseQueryMode, null);
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -106,20 +152,7 @@ namespace AutoAd.Api.Builders
 
         public string Build()
         {
-            switch (_searchType)
-            {
-                case SearchType.None:
-                    _sb.Append(")");
-                    break;
-                case SearchType.User:
-                    _sb.Append(")");
-                    break;
-                case SearchType.Group:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(_searchType), _searchType, null);
-            }
-            _sb.Append(")");
+            _sb.Append($"{(HasFilters ? "))" : "" )}");
             return _sb.ToString();
         }
     }

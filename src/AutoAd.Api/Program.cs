@@ -10,140 +10,83 @@ using Novell.Directory.Ldap;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AutoAd.Api.Builders;
+using System.Threading.Tasks;
+using AutoAd.Api.Config;
 using AutoAd.Api.Extensions;
-using AutoAd.Api.Models;
+using AutoAd.AspNetCore;
+using AutoAd.AspNetCore.Builders;
+using AutoAd.AspNetCore.Extensions;
+using AutoAd.AspNetCore.Extensions.DependencyInjection;
+using AutoAd.AspNetCore.Models;
 using Newtonsoft.Json.Linq;
+using Serilog;
+using LdapEntry = Novell.Directory.Ldap.LdapEntry;
 
 namespace AutoAd.Api
 {
     public class Program
     {
-        private static AppSettings _appSettings;
+        private static IConfiguration _configuration;
 
-        public static void Main()
+        public static async Task Main(string[] args)
         {
-            BuildWebHost().Run();
+            try
+            {
+                _configuration = ConfigurationHelper.CreateDefaultConfiguration(args);
+                Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(_configuration).CreateLogger();
+                IWebHostBuilder webHostBuilder = CreateWebHostBuilder(args);
+                Log.Information("Web Host created");
+                IWebHost webHost = webHostBuilder.Build();
+                Log.Information("Web Host builded, starting...");
+                var applicationLifetime = webHost.Services.GetService<IApplicationLifetime>();
+                applicationLifetime.ApplicationStarted.Register(() => Log.Information("Web Host started"));
+                await webHost.RunAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Host terminated unexpectedly");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
-        public static IWebHost BuildWebHost() =>
-            new WebHostBuilder()
-                .UseKestrel(options => options.AddServerHeader = false)
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
+        {
+            string environment = EnvironmentHelper.GetAspNetCoreEnvironment();
+            string urls = EnvironmentHelper.GetAspNetCoreUrls();
+            Log.Information("Current environment: {environment}, urls used: {urls}", environment, urls);
+            _configuration = _configuration ?? ConfigurationHelper.CreateDefaultConfiguration(args);
+            var appOptions = _configuration.Get<AppSettings>();
+            Log.Debug("Configuration used: {@configuration}", appOptions);
+
+            return new WebHostBuilder()
+                .SuppressStatusMessages(true)
+                .UseEnvironment(environment)
+//                .UseUrls(urls)
+                .UseKestrel()
+                .ConfigureKestrel(options => options.AddServerHeader = false)
                 .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseIISIntegration()
-                .ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-                    config.AddEnvironmentVariables();
-                    _appSettings = config.Build().Get<AppSettings>();
-                })
-                .ConfigureLogging((hostingContext, logging) =>
-                {
-                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    logging.AddConsole();
-                    if (hostingContext.HostingEnvironment.IsDevelopment())
-                    {
-                    }
-                })
-                .UseDefaultServiceProvider((context, options) =>
-                {
-                    options.ValidateScopes = context.HostingEnvironment.IsDevelopment();
-                })
+                .UseConfiguration(_configuration)
                 .ConfigureServices(services =>
                 {
-                    services.AddRouting();
-                    if (_appSettings.Cors.Enabled)
+                    if (appOptions.Cors.Enabled)
                     {
                         services.AddCors();
                     }
+
+                    services.AddAutoAd(_configuration);
                 })
+                .UseSerilog()
+                .UseIIS()
+                .UseIISIntegration()
+                .UseDefaultServiceProvider((context, options) => options.ValidateScopes = context.HostingEnvironment.IsDevelopment())
                 .Configure(app =>
                 {
-                    app.ConfigureCors(_appSettings);
-                    app.UseRouter(r =>
-                    {
-                        r.MapGet("users", async context =>
-                        {
-                            using (var cn = new LdapConnection())
-                            {
-                                if (_appSettings.ReferralFollowing)
-                                {
-                                    // todo(tre): check if "cn.Constraints.ReferralFollowing = true" is the same
-                                    
-                                    var constraints = cn.SearchConstraints;
-                                    constraints.ReferralFollowing = true;
-                                    cn.Constraints = constraints;
-                                }
-
-                                cn.Connect(_appSettings.Ldap.Host, _appSettings.Ldap.Port);
-                                cn.Bind(_appSettings.Ldap.User, _appSettings.Ldap.Password);
-
-                                string @base = GetBase(context);
-                                if (string.IsNullOrEmpty(@base))
-                                {
-                                    context.Response.StatusCode = 400;
-                                    await context.Response.WriteAsync("No base defined.");
-                                    return;
-                                }
-
-                                string[] attrs = GetAttrs(context);
-                                
-                                IEnumerable<Filter> filters = context.Request.Query.GetFilters().ToList();
-                                var builder = new LdapQueryBuilder(SearchType.User);
-                                if (filters.Any())
-                                {
-                                    foreach (Filter filter in filters)
-                                    {
-                                        builder.AddFilter(filter);
-                                    }
-                                }
-
-                                string ldapQuery = builder.Build();
-
-                                LdapSearchResults ldapResults = cn.Search(@base, LdapConnection.SCOPE_SUB, ldapQuery, attrs, false);
-                                var entries = new List<LdapEntry>();
-
-                                var array = new JArray();
-                                while (ldapResults.hasMore())
-                                {
-                                    LdapEntry user = ldapResults.next();
-                                    var attrSet = user.getAttributeSet();
-                                    
-                                    JObject @object = new JObject();
-                                    foreach (LdapAttribute ldapAttribute in attrSet)
-                                    {
-                                        @object.Add(ldapAttribute.Name, ldapAttribute.StringValue);
-                                    }
-
-                                    array.Add(@object);
-                                    entries.Add(user);
-                                }
-                                
-                                string json = array.ToString();
-                                context.Response.ContentType = "application/json";
-                                await context.Response.WriteAsync(json);
-                            }
-                        });
-                    });
-                })
-                .Build();
-
-        private static string GetBase(HttpContext context)
-        {
-            string @base = context.Request.Query["base"].ToString();
-            if (string.IsNullOrEmpty(@base))
-            {
-                @base = _appSettings.Ldap.Base;
-            }
-
-            return @base;
-        }
-        
-        private static string[] GetAttrs(HttpContext context)
-        {
-            if (!context.Request.Query.ContainsKey("attrs"))
-                return null;
-            return context.Request.Query["attrs"].ToString().Split(',');
+                    app.ConfigureCors(appOptions);
+                    app.UseAutoAd();
+                });
         }
     }
 }

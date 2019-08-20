@@ -1,4 +1,4 @@
-﻿namespace AutoAd.Api.Builders
+﻿namespace AutoAd.AspNetCore.Builders
 {
     public enum SearchType : byte
     {

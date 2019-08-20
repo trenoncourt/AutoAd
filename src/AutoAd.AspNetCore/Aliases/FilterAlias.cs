@@ -1,4 +1,4 @@
-﻿namespace AutoAd.Api.Aliases
+﻿namespace AutoAd.AspNetCore.Aliases
 {
     public class FilterAlias
     {

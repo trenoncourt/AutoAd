@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AutoAd.Api.Extensions
+namespace AutoAd.AspNetCore.Extensions
 {
     public static class StringExtensions
     {

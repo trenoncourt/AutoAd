@@ -1,4 +1,4 @@
-﻿namespace AutoAd.Api.Models
+﻿namespace AutoAd.AspNetCore.Models
 {
     public class Filter
     {
